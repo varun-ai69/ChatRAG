@@ -28,7 +28,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options("/*", cors(corsOptions));
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -47,6 +47,14 @@ app.use("/api/contact", contactRoutes);
 
 app.get("/", (req, res) => {
   res.send("API running");
+});
+
+// 404 handler for any unmatched route
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
 
 app.use((err, req, res, next) => {
