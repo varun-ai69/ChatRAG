@@ -2,20 +2,22 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
-const cors = require("cors");
 
 dotenv.config();
 
-// ── CORS ─────────────────────────────────────────────────────────────────────
-// origin:"*" + no credentials = works from ANY website (dashboard + widget)
-const corsOptions = {
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
-  optionsSuccessStatus: 204,
-};
-app.use(cors(corsOptions));
-// cors() automatically ends OPTIONS preflight requests — no app.options() needed
+// ── CORS — injected on EVERY response (incl. errors, auth rejections, cold starts)
+// Must be the VERY FIRST middleware so no downstream code can skip it.
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-api-key");
+
+  // Short-circuit preflight immediately — no auth, no body parsing, nothing else
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // ── Body / Static ─────────────────────────────────────────────────────────────
 app.use(express.static("public"));
