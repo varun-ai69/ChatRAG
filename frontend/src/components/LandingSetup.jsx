@@ -6,17 +6,17 @@ export default function LandingSetup() {
   const [copied, setCopied] = useState(false);
 
   const codeSnippets = {
-    HTML: `<!-- Paste before </body> -->\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`,
-    React: `<!-- public/index.html → before </body> -->\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`,
-    Django: `{# base.html → before </body> #}\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`,
-    PHP: `<!-- footer.php → before </body> -->\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`
+    HTML: `<!-- Paste before </body> -->\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`,
+    React: `<!-- public/index.html → before </body> -->\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`,
+    Django: `{# base.html → before </body> #}\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`,
+    PHP: `<!-- footer.php → before </body> -->\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_...f5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`
   };
 
   const fullApiKeySnippet = {
-    HTML: `<!-- Paste before </body> -->\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`,
-    React: `<!-- public/index.html → before </body> -->\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`,
-    Django: `{# base.html → before </body> #}\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`,
-    PHP: `<!-- footer.php → before </body> -->\n<script\n  src="https://chatrag-jz3p.onrender.com/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://chatrag-jz3p.onrender.com/api/chat"\n></script>`
+    HTML: `<!-- Paste before </body> -->\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`,
+    React: `<!-- public/index.html → before </body> -->\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`,
+    Django: `{# base.html → before </body> #}\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`,
+    PHP: `<!-- footer.php → before </body> -->\n<script\n  src="https://patient-comfort-production-9aee.up.railway.app/widget.js"\n  data-api-key="pk_live_f01cfbae8c99c62d5dbb0ebc10a0d1ae8f2d516bf5de8d"\n  data-api-url="https://patient-comfort-production-9aee.up.railway.app/api/chat"\n></script>`
   };
 
   const handleCopy = () => {
@@ -135,11 +135,11 @@ export default function LandingSetup() {
                   <br />
                   <span className="text-blue-400">&lt;script</span>
                   <br />
-                  <span className="pl-4 text-purple-300">src</span><span className="text-gray-300">="</span><span className="text-green-300">https://chatrag-jz3p.onrender.com/widget.js</span><span className="text-gray-300">"</span>
+                  <span className="pl-4 text-purple-300">src</span><span className="text-gray-300">="</span><span className="text-green-300">https://patient-comfort-production-9aee.up.railway.app/widget.js</span><span className="text-gray-300">"</span>
                   <br />
                   <span className="pl-4 text-purple-300">data-api-key</span><span className="text-gray-300">="</span><span className="text-green-300">pk_live_f01cfbae8<span className="blur-[3px] select-none text-gray-500">c99c62d5dbb0ebc10a0d1ae8</span>f2d516bf5de8d2a</span><span className="text-gray-300">"</span>
                   <br />
-                  <span className="pl-4 text-purple-300">data-api-url</span><span className="text-gray-300">="</span><span className="text-green-300">https://chatrag-jz3p.onrender.com/api/chat</span><span className="text-gray-300">"</span>
+                  <span className="pl-4 text-purple-300">data-api-url</span><span className="text-gray-300">="</span><span className="text-green-300">https://patient-comfort-production-9aee.up.railway.app/api/chat</span><span className="text-gray-300">"</span>
                   <br />
                   <span className="text-blue-400">&gt;&lt;/script&gt;</span>
                 </div>

@@ -1,7 +1,7 @@
 (function () {
   const scriptTag = document.currentScript;
   const apiKey  = scriptTag.getAttribute("data-api-key");
-  const API_BASE = scriptTag.getAttribute("data-api-url") || "https://chatrag-jz3p.onrender.com/api/chat";
+  const API_BASE = scriptTag.getAttribute("data-api-url") || "https://patient-comfort-production-9aee.up.railway.app/api/chat";
 
   let sessionId = null;
   let botConfig = {

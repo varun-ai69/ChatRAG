@@ -57,7 +57,7 @@ export default function ContactPage() {
 
     try {
       // Connect to the newly built backend route map
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://chatrag-jz3p.onrender.com"}/api/contact/submit`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://patient-comfort-production-9aee.up.railway.app"}/api/contact/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)

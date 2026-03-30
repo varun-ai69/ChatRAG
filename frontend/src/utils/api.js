@@ -1,7 +1,7 @@
 import axios from "axios";
 import { clearAuth, getToken } from "./auth";
 
-export const API_BASE = import.meta.env.VITE_API_URL || "https://chatrag-jz3p.onrender.com";
+export const API_BASE = import.meta.env.VITE_API_URL || "https://patient-comfort-production-9aee.up.railway.app";
 
 export const api = axios.create({
   baseURL: API_BASE,
