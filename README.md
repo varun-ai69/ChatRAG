@@ -182,9 +182,188 @@ Communicates with backend via:
 
 ```
 
-##System Behavior
+## System Behavior
 
--Ingestion and retrieval pipelines are fully decoupled
--No response is generated without retrieved context
--Ensures high accuracy and eliminates hallucinations
--Scales independently for ingestion and query workloads
+- Ingestion and retrieval pipelines are fully decoupled  
+- No response is generated without retrieved context  
+- Ensures high accuracy and eliminates hallucinations  
+- Scales independently for ingestion and query workloads
+
+
+
+## Tech Stack
+
+### Frontend
+- React 19  
+- Tailwind CSS  
+
+---
+
+### Backend
+- Node.js  
+- Express.js  
+- REST API architecture  
+- JWT for authentication  
+
+---
+
+### Database
+- MongoDB Atlas (stores users, documents, and chat data)  
+
+---
+
+### RAG Core Infrastructure
+
+- **Vector Database:** Qdrant  
+- **Embedding Model:** Xenova/bge-base-en-v1.5  
+- **LLM:** llama-3.3-70b-versatile (via API)  
+- **Parsing & Chunking:** LangChain  
+
+---
+
+### Deployment Infrastructure
+
+- **Frontend:** Vercel  
+- **Backend:** Railway  
+- **Vector DB:** Qdrant Cloud  
+- **Database:** MongoDB Atlas  
+
+---
+
+### LLM Integration
+
+- Communicates with the LLM using API keys  
+- Ensures secure and scalable interaction with the model  
+
+
+
+## Setup Guide
+
+Follow the steps below to run ChatRAG locally.
+
+---
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/varun-ai69/ChatRAG.git
+cd ChatRAG
+```
+
+---
+
+## Backend Setup
+
+### 2. Install Dependencies
+
+```bash
+cd backend
+npm install
+```
+
+---
+
+### 3. Environment Variables
+
+Create a `.env` file inside the `backend` folder:
+
+```env
+PORT=3000
+MONGO_URL=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+GROQ_API_KEY=your_groq_api_key
+BASE_URL=http://localhost:3000
+QDRANT_URL=your_qdrant_url
+QDRANT_API_KEY=your_qdrant_api_key
+```
+
+---
+
+### 4. Setup Qdrant (Docker)
+
+Make sure Docker is installed, then run:
+
+```bash
+docker run -p 6333:6333 qdrant/qdrant
+```
+
+Qdrant will be available at:
+
+```
+http://localhost:6333
+```
+
+---
+
+### 5. Run Backend Server
+
+```bash
+node server.js
+```
+
+Backend runs at:
+
+```
+http://localhost:3000
+```
+
+---
+
+## Frontend Setup
+
+### 6. Install Dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+---
+
+### 7. Environment Variables
+
+Create a `.env` file inside the `frontend` folder:
+
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+---
+
+### 8. Run Frontend
+
+```bash
+npm run dev
+```
+
+Frontend runs at:
+
+```
+http://localhost:5173
+```
+
+---
+
+
+## Future Improvements
+
+- **Local LLM Support**  
+  Add support for running models locally using tools like Ollama to reduce dependency on external APIs and improve privacy.
+
+- **Improved Ingestion Pipeline**  
+  Optimize document processing speed and reliability for handling large files and high-volume uploads.
+
+- **Background Job Queue**  
+  Introduce queue-based processing (e.g., BullMQ) for better handling of asynchronous ingestion and retries.
+
+- **Multi-Platform SDKs**  
+  Provide SDKs and integrations for different platforms (Next.js, mobile apps, etc.).
+
+- **Multi-Language Support**  
+  Extend support for multiple languages in both ingestion and response generation.
+
+
+
+
+
+
