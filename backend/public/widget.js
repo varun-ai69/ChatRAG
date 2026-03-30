@@ -1,7 +1,7 @@
 (function () {
   const scriptTag = document.currentScript;
   const apiKey = scriptTag.getAttribute("data-api-key");
-  const API_BASE ="http://localhost:3000/api/chat";
+  const API_BASE ="https://chatrag-jz3p.onrender.com/api/chat";
 
   let sessionId = null;
   let botConfig = {
