@@ -1,7 +1,7 @@
 (function () {
   const scriptTag = document.currentScript;
   const apiKey = scriptTag.getAttribute("data-api-key");
-  const API_BASE = scriptTag.getAttribute("data-api-url") || "http://localhost:3000/api/chat";
+  const API_BASE ="http://localhost:3000/api/chat";
 
   let sessionId = null;
   let botConfig = {
