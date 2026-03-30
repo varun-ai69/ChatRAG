@@ -43,44 +43,47 @@ exports.ingestDocuments = async (req, res) => {
             return res.status(400).json({ error: "No files uploaded" });
         }
 
-        // ✅ SEND RESPONSE IMMEDIATELY
-        res.json({
-            message: "Upload received, processing started",
-        });
+        // ✅ SAVE TO MONGO FIRST (before responding) so UI sees PROCESSING docs immediately
+        const pendingDocs = [];
 
-        // 🔥 BACKGROUND PROCESS
+        for (const file of files) {
+            try {
+                const fileHash = await generateFileHash(file.path);
+                const existingDoc = await Document.findOne({ companyId, fileHash });
+                if (existingDoc) {
+                    console.log("ℹ️ Skipping duplicate:", file.originalname);
+                    continue;
+                }
+
+                const document = await Document.create({
+                    companyId,
+                    uploadedBy: userId,
+                    title: file.originalname,
+                    originalFileName: file.originalname,
+                    storedFileName: file.filename,
+                    filePath: file.path,
+                    fileType: file.mimetype,
+                    fileSize: file.size,
+                    status: "PROCESSING",
+                    fileHash,
+                });
+
+                pendingDocs.push({ file, document });
+            } catch (err) {
+                console.error("❌ Pre-save error for:", file.originalname, err);
+            }
+        }
+
+        // ✅ RESPOND IMMEDIATELY — docs are now in DB as PROCESSING
+        res.json({ message: "Upload received, processing started" });
+
+        // 🔥 BACKGROUND: heavy embedding + vector insert
         setImmediate(async () => {
             try {
-                await initVectorDB(); //intialized the vectorDB collection
+                await initVectorDB();
 
-                for (const file of files) {
-                    let document;
+                for (const { file, document } of pendingDocs) {
                     try {
-                        const fileHash = await generateFileHash(file.path);
-
-                        const existingDoc = await Document.findOne({
-                            companyId,
-                            fileHash
-                        });
-
-                        if (existingDoc) {
-                            console.log("ℹ️ Skipping duplicate file:", file.originalname);
-                            continue;
-                        }
-
-                        document = await Document.create({
-                            companyId,
-                            uploadedBy: userId,
-                            title: file.originalname,
-                            originalFileName: file.originalname,
-                            storedFileName: file.filename,
-                            filePath: file.path,
-                            fileType: file.mimetype,
-                            fileSize: file.size,
-                            status: "PROCESSING",
-                            fileHash
-                        });
-
                         const parsedChunks = await parseDocument(file.path, file.mimetype);
                         const chunks = await generateChunks(parsedChunks, {
                             companyId,
@@ -90,12 +93,10 @@ exports.ingestDocuments = async (req, res) => {
                         });
 
                         const embeddedChunks = await embedChunks(chunks);
-
-                        console.log("🔥 EMBEDDING DONE");
+                        console.log("🔥 EMBEDDING DONE:", file.originalname);
 
                         await insertVectors(embeddedChunks);
-
-                        console.log("🔥 VECTOR INSERT DONE");
+                        console.log("🔥 VECTOR INSERT DONE:", file.originalname);
 
                         document.status = "ACTIVE";
                         document.chunkCount = chunks.length;
@@ -103,12 +104,9 @@ exports.ingestDocuments = async (req, res) => {
                         await document.save();
 
                     } catch (err) {
-                        console.error("❌ Background error for file:", file?.originalname, err);
-
-                        if (document) {
-                            document.status = "FAILED";
-                            await document.save();
-                        }
+                        console.error("❌ Background error for:", file?.originalname, err);
+                        document.status = "FAILED";
+                        await document.save();
                     }
                 }
 

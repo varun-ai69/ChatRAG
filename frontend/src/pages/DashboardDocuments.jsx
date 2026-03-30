@@ -81,12 +81,16 @@ function UploadModal({ onClose, onSuccess }) {
     const form = new FormData();
     files.forEach(f => form.append("files", f));
     try {
-      const { data } = await api.post("/api/upload/ingestion", form, {
+      await api.post("/api/upload/ingestion", form, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setResults(data.results || []);
+      // Backend processes in background — docs are saved as PROCESSING in DB
+      // show synthetic results so the user gets confirmation
+      const synthetic = files.map(f => ({ file: f.name, status: "PROCESSING" }));
+      setResults(synthetic);
       setFiles([]);
-      onSuccess();
+      // Refresh list after a short delay so Mongo write is visible
+      setTimeout(() => onSuccess(), 800);
     } catch (err) {
       setResults([{ file: "Upload", status: "FAILED", error: err?.response?.data?.error || "Upload failed" }]);
     } finally {
