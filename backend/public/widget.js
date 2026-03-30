@@ -23,6 +23,7 @@
   fontLink.rel = "stylesheet";
   fontLink.href = "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap";
   document.head.appendChild(fontLink);
+  
 
   // ── SVG Icons ───────────────────────────────────────────────────────────────
   const DEFAULT_AVATAR = `<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
