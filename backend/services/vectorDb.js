@@ -1,8 +1,8 @@
 const { QdrantClient } = require("@qdrant/js-client-rest");
 
 const client = new QdrantClient({
-  url: process.env.QDRANT_URL || "http://localhost:6333",
-  apiKey: process.env.QDRANT_API_KEY || undefined,
+  url: process.env.QDRANT_URL,
+  apiKey: process.env.QDRANT_API_KEY,
 });
 
 const COLLECTION_NAME = "documents_v1";
