@@ -177,11 +177,13 @@ function UploadModal({ onClose, onSuccess }) {
                 {results.map((r, i) => (
                   <li key={i} className="flex items-center gap-3 rounded-lg border border-gray-100 px-3 py-3">
                     <div className={`h-7 w-7 shrink-0 rounded-full flex items-center justify-center
-                      ${r.status === "SUCCESS" ? "bg-green-50" : r.status === "SKIPPED_DUPLICATE" ? "bg-yellow-50" : "bg-red-50"}`}>
+                      ${r.status === "SUCCESS" ? "bg-green-50" : r.status === "SKIPPED_DUPLICATE" ? "bg-yellow-50" : r.status === "PROCESSING" ? "bg-yellow-50" : "bg-red-50"}`}>
                       {r.status === "SUCCESS"
                         ? <Check size={13} className="text-green-600" />
                         : r.status === "SKIPPED_DUPLICATE"
                         ? <AlertCircle size={13} className="text-yellow-600" />
+                        : r.status === "PROCESSING"
+                        ? <Loader2 size={13} className="text-yellow-600 animate-spin" />
                         : <X size={13} className="text-red-500" />}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -189,14 +191,16 @@ function UploadModal({ onClose, onSuccess }) {
                       <p className="text-xs text-gray-400">
                         {r.status === "SUCCESS" ? `${r.totalChunks} chunks indexed`
                           : r.status === "SKIPPED_DUPLICATE" ? "Already uploaded"
+                          : r.status === "PROCESSING" ? "Queued for processing"
                           : "Failed to process"}
                       </p>
                     </div>
                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded
                       ${r.status === "SUCCESS" ? "bg-green-50 text-green-700"
                         : r.status === "SKIPPED_DUPLICATE" ? "bg-yellow-50 text-yellow-700"
+                        : r.status === "PROCESSING" ? "bg-yellow-50 text-yellow-700"
                         : "bg-red-50 text-red-700"}`}>
-                      {r.status === "SUCCESS" ? "Done" : r.status === "SKIPPED_DUPLICATE" ? "Skipped" : "Failed"}
+                      {r.status === "SUCCESS" ? "Done" : r.status === "SKIPPED_DUPLICATE" ? "Skipped" : r.status === "PROCESSING" ? "Processing" : "Failed"}
                     </span>
                   </li>
                 ))}
