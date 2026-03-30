@@ -15,7 +15,7 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // handle preflight for every route
+// cors() automatically ends OPTIONS preflight requests — no app.options() needed
 
 // ── Body / Static ─────────────────────────────────────────────────────────────
 app.use(express.static("public"));

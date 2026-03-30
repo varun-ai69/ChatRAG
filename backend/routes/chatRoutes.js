@@ -4,8 +4,12 @@ const router = express.Router();
 const { initSession, handleChat } = require("../controllers/chatController");
 const { chatAuthMiddleware } = require("../middlewares/chatAuth");
 
-// ✅ Handle OPTIONS preflight at the top — before any auth runs
-router.options("*", (req, res) => res.sendStatus(204));
+// ✅ Short-circuit OPTIONS preflight before auth middleware
+// router.options("*") crashes Express 5 — use pathless middleware instead
+router.use((req, res, next) => {
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 router.use(chatAuthMiddleware);
 
