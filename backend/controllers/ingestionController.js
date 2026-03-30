@@ -1,33 +1,21 @@
 /**
- * Ingestion Controller (RAG System – Data Preparation Layer system-1)
+ * Ingestion Controller (RAG System – Data Preparation Layer)
  *
- * This controller is responsible for the first stage of the RAG pipeline.
- * It handles the ingestion of raw input data and prepares it for retrieval-based
- * generation by converting unstructured content into structured, searchable form.
- *
- * The controller performs the following tasks:
- * - Accepts raw text extracted from documents or files
- * - Cleans and normalizes the content
- * - Splits the text into meaningful semantic chunks
- * - Prepares each chunk for embedding and storage in the vector database
- * - It also stores the document data into the DB
- *
- * This module represents the "training" or ingestion side of the RAG system.
- * It does NOT handle user queries or answer generation.
- * Its only responsibility is to convert raw knowledge into retrievable data.
+ * Flow:
+ * 1. Hash check → skip duplicates
+ * 2. Save document to Mongo as PROCESSING (sync, before responding)
+ * 3. Respond immediately to client (no timeout)
+ * 4. In background: parse → chunk → embed → insert vectors → mark ACTIVE
  */
 
 const Document = require("../models/document");
-const { parseDocument } = require("../services/parsar");
-const { generateChunks } = require("../services/chunkGenerator")
-const { embedChunks } = require("../services/embeddingService")
-const {
-    initVectorDB,
-    insertVectors,
-} = require("../services/vectorDb");
-const fs = require("fs").promises;
+const { parseDocument }  = require("../services/parsar");
+const { generateChunks } = require("../services/chunkGenerator");
+const { embedChunks }    = require("../services/embeddingService");
+const { insertVectors }  = require("../services/vectorDb");
+const fs     = require("fs").promises;
 const crypto = require("crypto");
-//it will generate a fileHash for ever file
+
 async function generateFileHash(filePath) {
     const buffer = await fs.readFile(filePath);
     return crypto.createHash("sha256").update(buffer).digest("hex");
@@ -35,83 +23,90 @@ async function generateFileHash(filePath) {
 
 exports.ingestDocuments = async (req, res) => {
     try {
-        const files = req.files;
+        const files     = req.files;
         const companyId = req.user.companyId;
-        const userId = req.user.userId;
+        const userId    = req.user.userId;
 
         if (!files || files.length === 0) {
             return res.status(400).json({ error: "No files uploaded" });
         }
 
-        // ✅ SAVE TO MONGO FIRST (before responding) so UI sees PROCESSING docs immediately
+        // ── Step 1: Save all docs to Mongo as PROCESSING (sync) ─────────────
+        // Done BEFORE responding so the UI immediately sees them in the list.
         const pendingDocs = [];
 
         for (const file of files) {
             try {
-                const fileHash = await generateFileHash(file.path);
+                const fileHash    = await generateFileHash(file.path);
                 const existingDoc = await Document.findOne({ companyId, fileHash });
+
                 if (existingDoc) {
-                    console.log("ℹ️ Skipping duplicate:", file.originalname);
+                    console.log("ℹ️  Skipping duplicate:", file.originalname);
                     continue;
                 }
 
                 const document = await Document.create({
                     companyId,
-                    uploadedBy: userId,
-                    title: file.originalname,
+                    uploadedBy:       userId,
+                    title:            file.originalname,
                     originalFileName: file.originalname,
-                    storedFileName: file.filename,
-                    filePath: file.path,
-                    fileType: file.mimetype,
-                    fileSize: file.size,
-                    status: "PROCESSING",
+                    storedFileName:   file.filename,
+                    filePath:         file.path,
+                    fileType:         file.mimetype,
+                    fileSize:         file.size,
+                    status:           "PROCESSING",
                     fileHash,
                 });
 
                 pendingDocs.push({ file, document });
+                console.log("📄 Saved PROCESSING doc:", file.originalname);
             } catch (err) {
-                console.error("❌ Pre-save error for:", file.originalname, err);
+                console.error("❌ Pre-save error for:", file.originalname, err.message);
             }
         }
 
-        // ✅ RESPOND IMMEDIATELY — docs are now in DB as PROCESSING
+        // ── Step 2: Respond immediately ──────────────────────────────────────
         res.json({ message: "Upload received, processing started" });
 
-        // 🔥 BACKGROUND: heavy embedding + vector insert
-        setImmediate(async () => {
-            try {
-                await initVectorDB();
+        // ── Step 3: Background pipeline (no setImmediate — Promise chain) ────
+        // initVectorDB is now called once at server startup, not here.
+        Promise.resolve().then(async () => {
+            for (const { file, document } of pendingDocs) {
+                try {
+                    console.log("🔄 Processing:", file.originalname);
 
-                for (const { file, document } of pendingDocs) {
-                    try {
-                        const parsedChunks = await parseDocument(file.path, file.mimetype);
-                        const chunks = await generateChunks(parsedChunks, {
-                            companyId,
-                            documentId: document._id.toString(),
-                            fileType: file.mimetype,
-                            docTitle: file.originalname,
-                        });
+                    const parsedChunks = await parseDocument(file.path, file.mimetype);
+                    console.log("✅ Parsed:", file.originalname, "— pages/chunks:", parsedChunks.length);
 
-                        const embeddedChunks = await embedChunks(chunks);
-                        console.log("🔥 EMBEDDING DONE:", file.originalname);
+                    const chunks = await generateChunks(parsedChunks, {
+                        companyId,
+                        documentId: document._id.toString(),
+                        fileType:   file.mimetype,
+                        docTitle:   file.originalname,
+                    });
+                    console.log("✅ Chunked:", chunks.length, "chunks");
 
-                        await insertVectors(embeddedChunks);
-                        console.log("🔥 VECTOR INSERT DONE:", file.originalname);
+                    const embeddedChunks = await embedChunks(chunks);
+                    console.log("✅ Embedded:", embeddedChunks.length, "vectors");
 
-                        document.status = "ACTIVE";
-                        document.chunkCount = chunks.length;
-                        document.lastIndexedAt = new Date();
-                        await document.save();
+                    await insertVectors(embeddedChunks);
+                    console.log("✅ Vectors inserted for:", file.originalname);
 
-                    } catch (err) {
-                        console.error("❌ Background error for:", file?.originalname, err);
-                        document.status = "FAILED";
-                        await document.save();
-                    }
+                    document.status       = "ACTIVE";
+                    document.chunkCount   = chunks.length;
+                    document.lastIndexedAt = new Date();
+                    await document.save();
+                    console.log("✅ Document ACTIVE:", file.originalname);
+
+                } catch (err) {
+                    console.error("❌ Failed for:", file?.originalname);
+                    console.error("❌ Error name:", err.name);
+                    console.error("❌ Error message:", err.message);
+                    console.error("❌ Stack:", err.stack);
+
+                    document.status = "FAILED";
+                    await document.save();
                 }
-
-            } catch (err) {
-                console.error("❌ GLOBAL BACKGROUND ERROR:", err);
             }
         });
 

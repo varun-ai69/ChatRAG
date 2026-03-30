@@ -1,7 +1,7 @@
 (function () {
   const scriptTag = document.currentScript;
-  const apiKey = scriptTag.getAttribute("data-api-key");
-  const API_BASE ="https://chatrag-jz3p.onrender.com/api/chat";
+  const apiKey  = scriptTag.getAttribute("data-api-key");
+  const API_BASE = scriptTag.getAttribute("data-api-url") || "https://chatrag-jz3p.onrender.com/api/chat";
 
   let sessionId = null;
   let botConfig = {
@@ -454,7 +454,13 @@
         headers: { "Content-Type": "application/json", "x-api-key": apiKey },
         body: JSON.stringify({ pageUrl: window.location.href }),
       });
-      if (!res.ok) throw new Error("Session init failed");
+      if (!res.ok) {
+        if (res.status === 401) {
+          introSubEl.textContent = "Invalid API key. Please contact support.";
+          return;
+        }
+        throw new Error("Session init failed");
+      }
       const data = await res.json();
       sessionId = data.sessionId;
 

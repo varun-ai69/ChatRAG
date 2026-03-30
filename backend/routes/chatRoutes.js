@@ -1,13 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const {
-  initSession,
-  handleChat,
-} = require("../controllers/chatController");
-
+const { initSession, handleChat } = require("../controllers/chatController");
 const { chatAuthMiddleware } = require("../middlewares/chatAuth");
 
+// ✅ Handle OPTIONS preflight at the top — before any auth runs
+router.options("*", (req, res) => res.sendStatus(204));
 
 router.use(chatAuthMiddleware);
 
