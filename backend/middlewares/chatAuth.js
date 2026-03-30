@@ -2,6 +2,9 @@
 const Company = require("../models/company");
 
 async function chatAuthMiddleware(req, res, next) {
+  // Skip auth on OPTIONS preflight — CORS middleware handles it before this runs
+  if (req.method === "OPTIONS") return next();
+
   try {
     const apiKey = req.headers["x-api-key"];
 

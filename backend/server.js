@@ -9,12 +9,22 @@ connectDB();
 const cors = require("cors");
 
 // Open CORS — allows any origin, supports all headers used by dashboard + widget
-app.use(cors({
+const corsOptions = {
   origin: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
   credentials: true,
-}));
+};
+app.use(cors(corsOptions));
+
+// ✅ Pre-flight: any OPTIONS request is answered immediately with CORS headers
+// Must be BEFORE all route middleware so auth never runs on preflight
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 app.use(express.static("public"));
 app.use(express.json());
