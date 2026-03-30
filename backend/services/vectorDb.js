@@ -37,12 +37,12 @@ async function initVectorDB() {
         field_schema: "keyword",
       });
 
-      console.log("✅ Collection created:", COLLECTION_NAME);
+      // console.log("Collection created:", COLLECTION_NAME);
     } else {
-      console.log("ℹ️ Collection already exists");
+      // console.log("Collection already exists");
     }
   } catch (err) {
-    console.error("❌ Qdrant init failed:", err);
+    console.error(" Qdrant init failed:", err);
     throw err;
   }
 }
@@ -64,7 +64,7 @@ async function isDocumentAlreadyIndexed(documentId, companyId) {
 
     return result.points.length > 0;
   } catch (err) {
-    console.error("❌ Document check failed:", err);
+    console.error("Document check failed:", err);
     throw err;
   }
 }
@@ -75,11 +75,11 @@ async function isDocumentAlreadyIndexed(documentId, companyId) {
 async function insertVectors(embeddedChunks) {
   try {
     if (!embeddedChunks || embeddedChunks.length === 0) {
-      console.log("⚠️ No vectors to insert");
+      // console.log("No vectors to insert");
       return;
     }
 
-    console.log(`🚀 Inserting ${embeddedChunks.length} vectors...`);
+    // console.log(`Inserting ${embeddedChunks.length} vectors...`);
 
     const batches = [];
 
@@ -94,9 +94,9 @@ async function insertVectors(embeddedChunks) {
     // ⚡ parallel execution
     await Promise.all(batches);
 
-    console.log(`✅ Inserted ${embeddedChunks.length} vectors`);
+    // console.log(`Inserted ${embeddedChunks.length} vectors`);
   } catch (err) {
-    console.error("❌ Vector insert failed:", err);
+    console.error("Vector insert failed:", err);
     throw err;
   }
 }
@@ -110,7 +110,7 @@ async function retryUpsert(batch, maxRetries = 3) {
   while (attempt < maxRetries) {
     try {
       await client.upsert(COLLECTION_NAME, {
-        wait: false, // ⚡ NON-BLOCKING (IMPORTANT FIX)
+        wait: false, // NON-BLOCKING (IMPORTANT FIX)
         points: batch.map((chunk) => ({
           id: chunk.id,
           vector: chunk.vector,
@@ -122,10 +122,10 @@ async function retryUpsert(batch, maxRetries = 3) {
     } catch (err) {
       attempt++;
 
-      console.log(`⚠️ Batch failed (attempt ${attempt}/${maxRetries})`);
+      // console.log(`Batch failed (attempt ${attempt}/${maxRetries})`);
 
       if (attempt === maxRetries) {
-        console.error("❌ Final batch failure:", err);
+        console.error("Final batch failure:", err);
         throw err;
       }
 
@@ -149,7 +149,7 @@ async function searchVectors(queryEmbedding, companyId, topK = 5) {
       with_payload: true,
     });
   } catch (err) {
-    console.error("❌ Search failed:", err);
+    console.error("Search failed:", err);
     throw err;
   }
 }
@@ -168,9 +168,9 @@ async function deleteVectorsByDocument(documentId, companyId) {
       },
     });
 
-    console.log("🗑 Deleted document vectors:", documentId);
+    // console.log("Deleted document vectors:", documentId);
   } catch (err) {
-    console.error("❌ Delete failed:", err);
+    console.error("Delete failed:", err);
     throw err;
   }
 }

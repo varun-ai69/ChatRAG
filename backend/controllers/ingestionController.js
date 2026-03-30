@@ -41,7 +41,7 @@ exports.ingestDocuments = async (req, res) => {
                 const existingDoc = await Document.findOne({ companyId, fileHash });
 
                 if (existingDoc) {
-                    console.log("ℹ️  Skipping duplicate:", file.originalname);
+                    // console.log("ℹ Skipping duplicate:", file.originalname);  debugging ke vkt uncomment krenge
                     continue;
                 }
 
@@ -59,9 +59,9 @@ exports.ingestDocuments = async (req, res) => {
                 });
 
                 pendingDocs.push({ file, document });
-                console.log("📄 Saved PROCESSING doc:", file.originalname);
+                // console.log("Saved PROCESSING doc:", file.originalname);debugging ke vkt uncomment krenge
             } catch (err) {
-                console.error("❌ Pre-save error for:", file.originalname, err.message);
+                console.error("Pre-save error for:", file.originalname, err.message);
             }
         }
 
@@ -73,10 +73,10 @@ exports.ingestDocuments = async (req, res) => {
         Promise.resolve().then(async () => {
             for (const { file, document } of pendingDocs) {
                 try {
-                    console.log("🔄 Processing:", file.originalname);
+                    // console.log("Processing:", file.originalname);debugging ke vkt uncomment krenge
 
                     const parsedChunks = await parseDocument(file.path, file.mimetype);
-                    console.log("✅ Parsed:", file.originalname, "— pages/chunks:", parsedChunks.length);
+                    // console.log("Parsed:", file.originalname, "— pages/chunks:", parsedChunks.length);debugging ke vkt uncomment krenge
 
                     const chunks = await generateChunks(parsedChunks, {
                         companyId,
@@ -84,25 +84,25 @@ exports.ingestDocuments = async (req, res) => {
                         fileType:   file.mimetype,
                         docTitle:   file.originalname,
                     });
-                    console.log("✅ Chunked:", chunks.length, "chunks");
+                    // console.log("Chunked:", chunks.length, "chunks");debugging ke vkt uncomment krenge
 
                     const embeddedChunks = await embedChunks(chunks);
-                    console.log("✅ Embedded:", embeddedChunks.length, "vectors");
+                    // console.log("Embedded:", embeddedChunks.length, "vectors");debugging ke vkt uncomment krenge
 
                     await insertVectors(embeddedChunks);
-                    console.log("✅ Vectors inserted for:", file.originalname);
+                    // console.log("Vectors inserted for:", file.originalname);debugging ke vkt uncomment krenge
 
                     document.status       = "ACTIVE";
                     document.chunkCount   = chunks.length;
                     document.lastIndexedAt = new Date();
                     await document.save();
-                    console.log("✅ Document ACTIVE:", file.originalname);
+                    // console.log("Document ACTIVE:", file.originalname);debugging ke vkt uncomment krenge
 
                 } catch (err) {
-                    console.error("❌ Failed for:", file?.originalname);
-                    console.error("❌ Error name:", err.name);
-                    console.error("❌ Error message:", err.message);
-                    console.error("❌ Stack:", err.stack);
+                    console.error("Failed for:", file?.originalname);
+                    console.error("Error name:", err.name);
+                    console.error("Error message:", err.message);
+                    console.error("Stack:", err.stack);
 
                     document.status = "FAILED";
                     await document.save();

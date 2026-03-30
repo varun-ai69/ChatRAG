@@ -57,13 +57,13 @@ connectDB()
   .then(async () => {
     try {
       await initVectorDB();
-      console.log("✅ VectorDB initialised");
+      // console.log("VectorDB initialised");
     } catch (e) {
-      console.error("⚠️  VectorDB init failed (server will still start):", e.message);
+      console.error(" VectorDB init failed (server will still start):", e.message);
     }
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {
-    console.error("❌ DB connection failed:", err);
+    console.error("DB connection failed:", err);
     process.exit(1);
   });
