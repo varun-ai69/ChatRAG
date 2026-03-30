@@ -8,11 +8,11 @@ connectDB();
 
 const cors = require("cors");
 
-// Simple, open CORS configuration to avoid connection issues
+// Open CORS — allows any origin, supports all headers used by dashboard + widget
 app.use(cors({
-  origin: true, // Automatically reflects any requesting origin back
+  origin: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
   credentials: true,
 }));
 
