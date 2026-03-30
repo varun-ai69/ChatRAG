@@ -8,27 +8,13 @@ connectDB();
 
 const cors = require("cors");
 
-const allowedOrigins = [
-  "https://chat-rag-lemon.vercel.app",
-  "http://localhost:3000",
-  "http://localhost:5173",
-];
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+// Simple, open CORS configuration to avoid connection issues
+app.use(cors({
+  origin: true, // Automatically reflects any requesting origin back
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.options("/*", cors(corsOptions));
+}));
 
 app.use(express.static("public"));
 app.use(express.json());
