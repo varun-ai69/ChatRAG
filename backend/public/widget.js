@@ -449,6 +449,8 @@
     try {
       const res = await fetch(`${API_BASE}/session`, {
         method: "POST",
+        mode: "cors",
+        credentials: "omit",
         headers: { "Content-Type": "application/json", "x-api-key": apiKey },
         body: JSON.stringify({ pageUrl: window.location.href }),
       });
@@ -496,6 +498,8 @@
     try {
       const res = await fetch(`${API_BASE}/message`, {
         method: "POST",
+        mode: "cors",
+        credentials: "omit",
         headers: { "Content-Type": "application/json", "x-api-key": apiKey },
         body: JSON.stringify({ sessionId, query: text }),
       });
