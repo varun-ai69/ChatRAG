@@ -8,7 +8,9 @@ const client = new QdrantClient({
 const COLLECTION_NAME = "documents_v1";
 const BATCH_SIZE = 20;
 
-
+// ─────────────────────────────────────────
+// INIT VECTOR DB
+// ─────────────────────────────────────────
 async function initVectorDB() {
   try {
     const collections = await client.getCollections();
@@ -20,11 +22,8 @@ async function initVectorDB() {
     if (!exists) {
       await client.createCollection(COLLECTION_NAME, {
         vectors: {
-          size: 768, 
+          size: 768,
           distance: "Cosine",
-        },
-        optimizers_config: {
-          memmap_threshold: 20000,
         },
       });
 
@@ -38,18 +37,19 @@ async function initVectorDB() {
         field_schema: "keyword",
       });
 
-      console.log("Collection + indexes created:", COLLECTION_NAME);
+      console.log("✅ Collection created:", COLLECTION_NAME);
     } else {
-      console.log("Collection already exists");
+      console.log("ℹ️ Collection already exists");
     }
   } catch (err) {
-    console.error("Qdrant init failed:", err);
+    console.error("❌ Qdrant init failed:", err);
     throw err;
   }
 }
 
-// Check if document already indexed
- 
+// ─────────────────────────────────────────
+// CHECK IF DOCUMENT ALREADY INDEXED
+// ─────────────────────────────────────────
 async function isDocumentAlreadyIndexed(documentId, companyId) {
   try {
     const result = await client.scroll(COLLECTION_NAME, {
@@ -64,76 +64,99 @@ async function isDocumentAlreadyIndexed(documentId, companyId) {
 
     return result.points.length > 0;
   } catch (err) {
-    console.error("Document check failed:", err);
+    console.error("❌ Document check failed:", err);
     throw err;
   }
 }
 
-
- // Insert vectors (batched + safe)
- 
+// ─────────────────────────────────────────
+// INSERT VECTORS (FAST + PARALLEL + SAFE)
+// ─────────────────────────────────────────
 async function insertVectors(embeddedChunks) {
   try {
+    if (!embeddedChunks || embeddedChunks.length === 0) {
+      console.log("⚠️ No vectors to insert");
+      return;
+    }
+
+    console.log(`🚀 Inserting ${embeddedChunks.length} vectors...`);
+
+    const batches = [];
+
     for (let i = 0; i < embeddedChunks.length; i += BATCH_SIZE) {
       const batch = embeddedChunks.slice(i, i + BATCH_SIZE);
 
-       let attempts = 0;
-      while (attempts < 3) {
-        try {
-          await client.upsert(COLLECTION_NAME, {
-            wait: true,
-            points: batch.map((chunk) => ({
-              id: chunk.id,
-              vector: chunk.vector,
-              payload: chunk.payload,
-            })),
-          });
-          break; // success - loop se bahar
-        } catch (err) {
-          attempts++;
-          if (attempts === 3) throw err;
-          console.log(`Batch failed, retrying... (${attempts}/3)`);
-          await new Promise(r => setTimeout(r, 1000 * attempts)); // 1s, 2s wait
-        }
-      }
-
-
-      console.log(
-        ` Upserted ${Math.min(
-          i + BATCH_SIZE,
-          embeddedChunks.length
-        )}/${embeddedChunks.length}`
+      batches.push(
+        retryUpsert(batch)
       );
     }
 
-    console.log(`Inserted ${embeddedChunks.length} vectors`);
+    // ⚡ parallel execution
+    await Promise.all(batches);
+
+    console.log(`✅ Inserted ${embeddedChunks.length} vectors`);
   } catch (err) {
-    console.error("Vector insert failed:", err);
+    console.error("❌ Vector insert failed:", err);
     throw err;
   }
 }
 
+// ─────────────────────────────────────────
+// RETRY LOGIC (IMPORTANT)
+// ─────────────────────────────────────────
+async function retryUpsert(batch, maxRetries = 3) {
+  let attempt = 0;
 
-//   Search vectors
- 
+  while (attempt < maxRetries) {
+    try {
+      await client.upsert(COLLECTION_NAME, {
+        wait: false, // ⚡ NON-BLOCKING (IMPORTANT FIX)
+        points: batch.map((chunk) => ({
+          id: chunk.id,
+          vector: chunk.vector,
+          payload: chunk.payload,
+        })),
+      });
+
+      return; // success
+    } catch (err) {
+      attempt++;
+
+      console.log(`⚠️ Batch failed (attempt ${attempt}/${maxRetries})`);
+
+      if (attempt === maxRetries) {
+        console.error("❌ Final batch failure:", err);
+        throw err;
+      }
+
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
+    }
+  }
+}
+
+// ─────────────────────────────────────────
+// SEARCH VECTORS
+// ─────────────────────────────────────────
 async function searchVectors(queryEmbedding, companyId, topK = 5) {
   try {
     return await client.search(COLLECTION_NAME, {
       vector: queryEmbedding,
       limit: topK,
-      score_threshold: 0.7, 
+      score_threshold: 0.7,
       filter: {
         must: [{ key: "companyId", match: { value: companyId } }],
       },
       with_payload: true,
     });
   } catch (err) {
-    console.error(" Search failed:", err);
+    console.error("❌ Search failed:", err);
     throw err;
   }
 }
 
-//delete vectors
+// ─────────────────────────────────────────
+// DELETE VECTORS
+// ─────────────────────────────────────────
 async function deleteVectorsByDocument(documentId, companyId) {
   try {
     await client.delete(COLLECTION_NAME, {
@@ -147,7 +170,7 @@ async function deleteVectorsByDocument(documentId, companyId) {
 
     console.log("🗑 Deleted document vectors:", documentId);
   } catch (err) {
-    console.error(" Delete failed:", err);
+    console.error("❌ Delete failed:", err);
     throw err;
   }
 }
