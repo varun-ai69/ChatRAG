@@ -57,12 +57,12 @@ export default function ContactPage() {
 
     try {
       // Connect to the newly built backend route map
-      const res = await fetch("http://localhost:3000/api/contact/submit", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "https://chatrag-jz3p.onrender.com"}/api/contact/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
-      
+
       const data = await res.json();
 
       if (res.ok) {
@@ -81,15 +81,15 @@ export default function ContactPage() {
   };
 
   return (
-    <div 
-      id="landing-scroll-container" 
+    <div
+      id="landing-scroll-container"
       className="bg-[#0B0C10] w-full h-screen overflow-y-auto overflow-x-hidden selection:bg-brand selection:text-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
     >
       <LandingNavbar />
 
       <section className="w-full pt-40 pb-24 relative z-10 flex flex-col justify-center">
         <div className="max-w-7xl mx-auto px-6 w-full">
-          
+
           <div className="mb-16">
             <h1 className="text-5xl md:text-7xl font-semibold text-white tracking-tight leading-[1.1] mb-6">
               Contact Us
@@ -100,10 +100,10 @@ export default function ContactPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-            
+
             {/* LEFT: THE FORM */}
             <div className="lg:col-span-5 flex flex-col">
-              
+
               {success ? (
                 <div className="w-full h-full min-h-[400px] border border-green-500/20 bg-green-500/[0.02] p-8 rounded-[2px] flex flex-col items-center justify-center text-center animate-fade-in-up">
                   <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-6">
@@ -126,8 +126,8 @@ export default function ContactPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="flex flex-col gap-2">
                       <label className="text-white text-sm font-medium tracking-wide">Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="name"
                         required
                         value={formData.name}
@@ -138,8 +138,8 @@ export default function ContactPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-white text-sm font-medium tracking-wide">Email</label>
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         name="email"
                         required
                         value={formData.email}
@@ -152,8 +152,8 @@ export default function ContactPage() {
 
                   <div className="flex flex-col gap-2">
                     <label className="text-white text-sm font-medium tracking-wide">Subject</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
@@ -164,7 +164,7 @@ export default function ContactPage() {
 
                   <div className="flex flex-col gap-2">
                     <label className="text-white text-sm font-medium tracking-wide">Message</label>
-                    <textarea 
+                    <textarea
                       name="message"
                       required
                       value={formData.message}
@@ -182,7 +182,7 @@ export default function ContactPage() {
                   >
                     <span className="absolute inset-0 w-0 bg-white transition-all duration-300 ease-out group-hover:w-full"></span>
                     <span className="relative z-10 group-hover:text-black transition-colors duration-300 flex items-center justify-center gap-2">
-                      {isSubmitting ? "Transmitting..." : "Send Message"} 
+                      {isSubmitting ? "Transmitting..." : "Send Message"}
                       {!isSubmitting && <Send className="w-4 h-4 ml-1 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
                     </span>
                   </button>
@@ -193,9 +193,9 @@ export default function ContactPage() {
 
             {/* RIGHT: LIVE FEED ANIMATION */}
             <div className="lg:col-span-7 flex flex-col h-full min-h-[400px]">
-              
+
               <div className="w-full h-full border border-white/10 bg-[#050505] rounded-[2px] shadow-2xl flex flex-col overflow-hidden relative group">
-                
+
                 {/* Simulated Glass/Glare */}
                 <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#6C63FF]/[0.02] blur-[80px] rounded-full pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
 
@@ -222,8 +222,8 @@ export default function ContactPage() {
                     ))}
                     {/* Blinking Cursor */}
                     <div className="flex items-center mt-2">
-                       <span className="text-green-400/80 mr-3 opacity-70">➔</span>
-                       <span className="w-2 h-4 bg-[#6C63FF]/70 animate-pulse"></span>
+                      <span className="text-green-400/80 mr-3 opacity-70">➔</span>
+                      <span className="w-2 h-4 bg-[#6C63FF]/70 animate-pulse"></span>
                     </div>
                   </div>
                 </div>
