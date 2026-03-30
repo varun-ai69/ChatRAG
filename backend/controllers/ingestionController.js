@@ -42,96 +42,79 @@ exports.ingestDocuments = async (req, res) => {
         if (!files || files.length === 0) {
             return res.status(400).json({ error: "No files uploaded" });
         }
-        await initVectorDB(); //intialized the vectorDB collection
-        const results = [];
 
-        for (const file of files) {
-            let document;
+        // ✅ SEND RESPONSE IMMEDIATELY
+        res.json({
+            message: "Upload received, processing started",
+        });
+
+        // 🔥 BACKGROUND PROCESS
+        setImmediate(async () => {
             try {
-                //first check the document already exists in dtabase or not 
-                const fileHash = await generateFileHash(file.path);
-                //fileHash already exist karta hai then skip the ingestion pipeline 
-                const existingDoc = await Document.findOne({
-                    companyId,
-                    fileHash
-                });
+                await initVectorDB(); //intialized the vectorDB collection
 
-                if (existingDoc) {
-                    results.push({
-                        file: file.originalname,
-                        status: "SKIPPED_DUPLICATE_FILE",
-                        documentId: existingDoc._id
-                    });
+                for (const file of files) {
+                    let document;
+                    try {
+                        const fileHash = await generateFileHash(file.path);
 
-                    continue;
+                        const existingDoc = await Document.findOne({
+                            companyId,
+                            fileHash
+                        });
+
+                        if (existingDoc) {
+                            console.log("ℹ️ Skipping duplicate file:", file.originalname);
+                            continue;
+                        }
+
+                        document = await Document.create({
+                            companyId,
+                            uploadedBy: userId,
+                            title: file.originalname,
+                            originalFileName: file.originalname,
+                            storedFileName: file.filename,
+                            filePath: file.path,
+                            fileType: file.mimetype,
+                            fileSize: file.size,
+                            status: "PROCESSING",
+                            fileHash
+                        });
+
+                        const parsedChunks = await parseDocument(file.path, file.mimetype);
+                        const chunks = await generateChunks(parsedChunks, {
+                            companyId,
+                            documentId: document._id.toString(),
+                            fileType: file.mimetype,
+                            docTitle: file.originalname,
+                        });
+
+                        const embeddedChunks = await embedChunks(chunks);
+
+                        console.log("🔥 EMBEDDING DONE");
+
+                        await insertVectors(embeddedChunks);
+
+                        console.log("🔥 VECTOR INSERT DONE");
+
+                        document.status = "ACTIVE";
+                        document.chunkCount = chunks.length;
+                        document.lastIndexedAt = new Date();
+                        await document.save();
+
+                    } catch (err) {
+                        console.error("❌ Background error for file:", file?.originalname, err);
+
+                        if (document) {
+                            document.status = "FAILED";
+                            await document.save();
+                        }
+                    }
                 }
-                //save docs into the database
-                document = await Document.create({
-                    companyId,
-                    uploadedBy: userId,
-                    title: file.originalname, // fallback
-                    originalFileName: file.originalname,
-                    storedFileName: file.filename,
-                    filePath: file.path,
-                    fileType: file.mimetype,
-                    fileSize: file.size,
-                    status: "PROCESSING",
-                    fileHash: fileHash
-                });
-                // pipeline starts here 
-
-
-                //1 parsing - it will extract raw text from the document
-                const parsedChunks = await parseDocument(file.path, file.mimetype);
-
-                //2 chunkGenerator - it will generate the chunks of the raw text 
-                const chunks = await generateChunks(parsedChunks, {
-                    companyId,
-                    documentId: document._id.toString(),
-                    fileType: file.mimetype,
-                    docTitle: file.originalname,
-                });
-
-                //3 now we create vectors for every chunks 
-                const embeddedChunks = await embedChunks(chunks);
-
-
-
-                //4 now storing the vectors into the vectorDB 
-                await insertVectors(embeddedChunks);
-
-
-                //updating the Document data into the database
-                document.status = "ACTIVE";
-                document.chunkCount = chunks.length;
-                document.lastIndexedAt = new Date();
-                await document.save();
-
-                results.push({
-                    file: file.originalname,
-                    status: "SUCCESS",
-                    documentId: document._id,
-                    totalChunks: chunks.length,
-                });
 
             } catch (err) {
-                console.error("Error saving file:", file.originalname, err);
-
-                if (document) {
-                    document.status = "FAILED";
-                    await document.save();
-                }
-
-                results.push({
-                    file: file.originalname,
-                    status: "FAILED"
-                });
+                console.error("❌ GLOBAL BACKGROUND ERROR:", err);
             }
-        }
-
-        res.json({
-            message: "Ingestion completed",
-            results
         });
 
     } catch (err) {
